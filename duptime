@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+
+import click
+
+
+def day_summary_calculator(record):
+    if ":" in record[0]:
+        hour, minute = tuple(record[0].split(":"))
+        return 60 * int(hour) + int(minute)
+    else:
+        return int(record[0])
+
+
+def day_summary_divide(day_summary):
+    if day_summary >= 60:
+        hour = day_summary // 60
+        minute = day_summary % 60
+        return f"{hour}:{minute}"
+    else:
+        return str(day_summary)
+
+
+@click.command()
+@click.option(
+    "-s",
+    "--show-by",
+    required=True,
+    type=click.Choice(["day", "week"], case_sensitive=False),
+    help="show the uptime by day or week or mounth",
+)
+@click.version_option("V 1.0")
+def duptime(show_by):
+    day_recoreds = []
+
+    with open("/var/log/duptime/logs.txt", "r") as f:
+        text = f.readlines()
+    for counter in list(range(len(text) - 1, 0, -2)):
+        time = text[counter - 1].split()[2].replace(",", "")
+        date = text[counter]
+        day_recoreds.append((time, date))
+
+    if show_by == "day":
+        day_summary = 0
+        current_date = day_recoreds[0][1]
+        for record in day_recoreds:
+            if record[1] == current_date:
+                day_summary += day_summary_calculator(record)
+
+        click.echo("system is up for " + day_summary_divide(day_summary))
+
+    elif show_by == "week":
+        week_summary = []
+        day_summary = 0
+        day_counter = 0
+        last_day = day_recoreds[0][1]
+        for record in day_recoreds:
+            if day_counter != 7:
+                current_day = record[1]
+                if current_day == last_day:
+                    day_summary += day_summary_calculator(record)
+                else:
+                    day_counter += 1
+                    week_summary.append((day_summary_divide(day_summary), last_day))
+                    day_summary = 0
+                    day_summary = day_summary_calculator(record)
+                    last_day = current_day
+
+        for day_summary in week_summary:
+            click.echo("Day " + day_summary[1] + "  uptime: " + day_summary[0])
+
+
+if __name__ == "__main__":
+    duptime()

@@ -1,0 +1,12 @@
+[Unit]
+Description=collecting system uptime datas
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/true
+ExecStop=/bin/bash /usr/local/bin/duptime-collector
+
+[Install]
+WantedBy=multi-user.target
+

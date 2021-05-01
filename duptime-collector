@@ -1,0 +1,2 @@
+uptime >> /var/log/duptime/logs.txt
+date "+%d" >> /var/log/duptime/logs.txt
