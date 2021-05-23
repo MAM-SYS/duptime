@@ -27,6 +27,7 @@ FILES = input output
 help:
 	@echo "---------------HELP-----------------"
 	@echo "To install the project type make install"
+	@echo "To remove the project type make remove"
 	@echo "To test the project type make test"
 	@echo "To run the project type make run"
 	@echo "------------------------------------"
@@ -34,11 +35,14 @@ help:
 # This generates the desired project file structure
 # A very important thing to note is that macros (or makefile variables) are referenced in the target's code with a single dollar sign ${}, but all script variables are referenced with two dollar signs $${}
 install: $(service) $(script) $(log) $(collector)
+	mkdir -p $(LOGDEST)
 	install -m 777 $(service) $(SERVICEDEST)
 	install -m 777 $(log) $(LOGDEST)
 	install -m 777 $(collector) $(COLLECTORDEST)
 	install -m 777 $(script) $(SCRIPTDEST)
-
+	systemctl daemon-reload
+	systemctl start duptime.service
+	systemctl enable duptime.service
 # The ${} notation is specific to the make syntax and is very similar to bash's $() 
 # This function uses pytest to test our source files
 test:
@@ -46,6 +50,17 @@ test:
 	
 run:
 	${PYTHON} our_app.py
+remove:
+	@echo "Removing ...."
+	rm /usr/local/bin/duptime-collector
+	rm /etc/systemd/system/duptime.service
+	rm /usr/bin/duptime
+	rm -rf /var/log/duptime
+	systemctl stop duptime.service
+	systemctl disable duptime.service
+	systemctl daemon-reload
+	@echo "Done"
+
 
 # In this context, the *.project pattern means "anything that has the .project extension"
 clean:
